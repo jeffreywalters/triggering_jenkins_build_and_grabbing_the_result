@@ -1,22 +1,22 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-const fetch = require('node-fetch');
-const FormData = require('form-data');
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+const fetch = require("node-fetch");
+const FormData = require("form-data");
 
 const data = {};
 
-const baseUrl = 'https://example.com/';
+const baseUrl = "https://example.com/";
 
 function triggerBuild(data) {
-  const path = 'job/job_name/buildWithParameters';
-  const token = '?token=';
+  const path = "job/job_name/buildWithParameters";
+  const token = "?token=";
   const url = encodeURI(baseUrl + path + token);
   const formData = new FormData(); //needed for passing arguments
-  const file = "/filename"
-  formData.append(file, JSON.stringify(data), file,);
-  fetch(url, {method: 'POST', body: formData})
-    .then(res => getBuildNumber(res.headers.get('location') + '/api/json'))
-    .catch((error) => {
-      console.error('Error:', error);
+  const file = "/filename";
+  formData.append(file, JSON.stringify(data), file);
+  fetch(url, { method: "POST", body: formData })
+    .then(res => getBuildNumber(res.headers.get("location") + "/api/json"))
+    .catch(error => {
+      console.error("Error:", error);
     });
 }
 
@@ -29,12 +29,16 @@ function getBuildNumber(url) {
           getBuildNumber(url);
         }, 2000);
       } else {
-        const postFix = 'job/job_name/' + json.executable.number + '/api/json';
+        const postFix =
+          "job/job_name/" +
+          encodeURIComponent()(json.executable.number) + //encodeURIComponent()
+          "/api/json";
         getBuildStatus(encodeURI(baseUrl + postFix));
       }
-    }).catch((error) => {
-    console.error('Error:', error);
-  });
+    })
+    .catch(error => {
+      console.error("Error:", error);
+    });
 }
 
 function getBuildStatus(url) {
@@ -42,15 +46,16 @@ function getBuildStatus(url) {
     .then(res => res.json())
     .then(json => {
       if (json.result === null) {
-        setTimeout(() => {
-          getBuildStatus(url);
-        }, 2000);
-      } else {
-        return json.result;
-      }
+        // setTimeout(() => {
+        //   getBuildStatus(url);
+        // }, 2000);
+        setTimeout(getBuildStatus, 2000, url); //slightly nicer syntax
+      } // else {
+      return json.result;
+      // }
     })
-    .catch((error) => {
-      console.error('Error:', error);
+    .catch(error => {
+      console.error("Error:", error);
     });
 }
 
